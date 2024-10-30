@@ -1,8 +1,9 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter_conf_game_flame/level/level.dart';
 
-class GameWorld extends FlameGame {
+class GameWorld extends FlameGame with HasKeyboardHandlerComponents{
   CameraComponent? cameraComponent;
 
   @override
