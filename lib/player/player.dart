@@ -1,19 +1,32 @@
 import 'dart:async';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
+import '../obstacle/obstacle.dart';
+
 class Player extends SpriteAnimationGroupComponent
-    with HasGameRef, KeyboardHandler {
+    with
+        HasGameRef,
+        KeyboardHandler,
+        CollisionCallbacks,
+        HasCollisionDetection {
   Vector2 velocity = Vector2.zero();
   Vector2 movement = Vector2.zero();
 
   @override
   Future<void> onLoad() async {
+    debugMode = true;
     await _loadAnimation();
     size = Vector2(128, 128);
     position = Vector2(100, 720 / 2);
+    add(
+      RectangleHitbox(
+        size: Vector2(70, 80),
+        position: Vector2(24, 34),
+      ),
+    );
   }
 
   _loadAnimation() async {
@@ -43,8 +56,9 @@ class Player extends SpriteAnimationGroupComponent
   @override
   void update(double dt) {
     super.update(dt);
-    _updateMovement(dt);
     _updateAnimation();
+    _updateMovement(dt);
+
   }
 
   _updateMovement(double dt) {
@@ -54,7 +68,7 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    movement = Vector2.zero();
+     //movement = Vector2.zero();
     if (keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
       movement.y -= 1;
     } else if (keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
@@ -77,6 +91,17 @@ class Player extends SpriteAnimationGroupComponent
       current = 'run';
     } else {
       current = 'idle';
+    }
+  }
+
+  @override
+  void onCollisionStart(
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (other is Obstacle) {
+      position = Vector2(100, 720 / 2);
     }
   }
 }
