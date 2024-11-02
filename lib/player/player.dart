@@ -7,13 +7,12 @@ import 'package:flutter/services.dart';
 import '../obstacle/obstacle.dart';
 
 class Player extends SpriteAnimationGroupComponent
-    with
-        HasGameRef,
-        KeyboardHandler,
-        CollisionCallbacks,
-        HasCollisionDetection {
+    with HasGameRef, KeyboardHandler, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   Vector2 movement = Vector2.zero();
+  Set<LogicalKeyboardKey> keysPressed = {};
+  bool colliding = false;
+  double collisionTimer = 0;
 
   @override
   Future<void> onLoad() async {
@@ -50,15 +49,22 @@ class Player extends SpriteAnimationGroupComponent
       'crash': SpriteAnimation.spriteList(crash, stepTime: 0.1),
     };
     current = 'run';
-    //final sprites = SpriteSheet(image: image, srcSize: srcSize);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (colliding) {
+      collisionTimer += dt;
+      if (collisionTimer > 0.4) {
+        colliding = false;
+        collisionTimer = 0;
+      }
+    }
     _updateAnimation();
-    _updateMovement(dt);
-
+    if (!colliding) {
+      _updateMovement(dt);
+    }
   }
 
   _updateMovement(double dt) {
@@ -68,21 +74,26 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-     //movement = Vector2.zero();
-    if (keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
-      movement.y -= 1;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
-      movement.y += 1;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowLeft)) {
-      movement.x -= 1;
-    } else if (keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
-      movement.x += 1;
+    if (event is KeyDownEvent) {
+      movement = Vector2.zero();
+      if (keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
+        movement.y += -1;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowDown)) {
+        movement.y += 1;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowLeft)) {
+        movement.x += -1;
+      } else if (keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+        movement.x += 1;
+      }
+      return true;
     }
     return super.onKeyEvent(event, keysPressed);
   }
 
   void _updateAnimation() {
-    if (velocity != Vector2.zero()) {
+    if (colliding) {
+      current = 'crash';
+    } else if (velocity != Vector2.zero()) {
       if (velocity.x > 0 && scale.x < 0) {
         flipHorizontallyAroundCenter();
       } else if (velocity.x < 0 && scale.x > 0) {
@@ -99,9 +110,11 @@ class Player extends SpriteAnimationGroupComponent
     Set<Vector2> intersectionPoints,
     PositionComponent other,
   ) {
-    super.onCollisionStart(intersectionPoints, other);
+    colliding = true;
     if (other is Obstacle) {
-      position = Vector2(100, 720 / 2);
+      movement = Vector2.zero();
+      velocity = Vector2.zero();
     }
+    super.onCollisionStart(intersectionPoints, other);
   }
 }

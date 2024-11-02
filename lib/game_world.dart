@@ -3,7 +3,8 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter_conf_game_flame/level/level.dart';
 
-class GameWorld extends FlameGame with HasKeyboardHandlerComponents{
+class GameWorld extends FlameGame
+    with HasKeyboardHandlerComponents, HasCollisionDetection {
   CameraComponent? cameraComponent;
 
   @override
@@ -12,9 +13,9 @@ class GameWorld extends FlameGame with HasKeyboardHandlerComponents{
     cameraComponent = CameraComponent.withFixedResolution(
       width: 1280,
       height: 720,
-      world: level
-    );
-    cameraComponent!.viewfinder.anchor = Anchor.topLeft;
+      world: level,
+    )..viewfinder.anchor = Anchor.topLeft;
+
     addAll([cameraComponent!, level]);
   }
 }
